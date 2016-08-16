@@ -9,7 +9,7 @@ data class ChunkRect(val x: Int, val y: Int, val w: Int, val h: Int) : Iterable<
         override fun next(): Pair<Int, Int> {
             val last = pixelCounter
             pixelCounter++
-            return Pair(x + last % w, y + last / w)
+            return Pair(last % w, last / w)
         }
     }
     override fun iterator(): Iterator<Pair<Int, Int>> = ChunkRectIterator()

@@ -3,18 +3,21 @@ package org.krayser.core
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
-import java.util.concurrent.TimeUnit
 
 /**
  * Main RayTracer control class
+ * @param scene reference to scene, which will be traced
+ * @param config data class with main ray tracer settings
  */
 class KrayserController(scene: Scene, config: KrayserConfig) {
 
-    private var chunks: MutableList<Future<*>> = arrayListOf()
+    var chunks: MutableList<Chunk> = arrayListOf()
+    private var chunkTasks: MutableList<Future<*>> = arrayListOf()
     private var threadPool: ExecutorService
     private var scene: Scene = scene
     private var width: Int = 800
     private var height: Int = 600
+
     init {
         threadPool = Executors.newFixedThreadPool(config.threads)
         width = config.imageSize.first
@@ -24,26 +27,25 @@ class KrayserController(scene: Scene, config: KrayserConfig) {
                 for (x in 0 until width step chunkSize) {
                     val w = if (x + chunkSize > width) width % chunkSize else chunkSize
                     val h = if (y + chunkSize > height) height % chunkSize else chunkSize
-                    chunks.add(threadPool.submit(Chunk(ChunkRect(x, y, w, h))))
+                    val chunk = Chunk(ChunkRect(x, y, w, h))
+                    chunks.add(chunk)
+                    chunkTasks.add(threadPool.submit(chunk))
                 }
             }
         }
     }
     fun abortTrace() {
-        // TODO: convert shutdown + awaitTermination to Extension function
         threadPool.shutdown()
-        for (c in chunks) {
+        for (c in chunkTasks) {
             c.cancel(true)
         }
-        threadPool.awaitTermination(10, TimeUnit.SECONDS)
     }
 
     fun awaitTrace() {
         threadPool.shutdown()
-        for (c in chunks) {
+        for (c in chunkTasks) {
             c.get()
         }
-        threadPool.awaitTermination(10, TimeUnit.SECONDS)
     }
 }
 

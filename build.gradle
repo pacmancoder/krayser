@@ -20,9 +20,12 @@ defaultTasks 'run'
 
 repositories {
     mavenCentral()
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
 }
 
-project.ext.lwjglVersion = "3.0.0"
+project.ext.lwjglVersion = "3.0.1-SNAPSHOT"
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
