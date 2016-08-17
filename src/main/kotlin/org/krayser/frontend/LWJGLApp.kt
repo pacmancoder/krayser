@@ -8,8 +8,6 @@ import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.*
 import org.lwjgl.glfw.Callbacks.glfwFreeCallbacks
 import org.lwjgl.glfw.GLFW.*
-import org.lwjgl.system.MemoryUtil
-import java.nio.FloatBuffer
 import org.lwjgl.system.MemoryUtil.NULL as LWJGL_NULL
 
 import kotlin.system.measureNanoTime
@@ -21,28 +19,43 @@ import kotlin.system.measureNanoTime
  * TODO: Divide surface on quads and assign different textures
  */
 object LWJGLApp: Frontend {
-    // window constants
-    const val windowWidth = defaultWidth
-    const val windowHeight = defaultHeight
 
-    private var windowHandle = LWJGL_NULL
+    // window constants
+    private const val windowWidth = defaultWidth
+    private const val windowHeight = defaultHeight
+
     // flag to prevent multiple LWJGL initializations
     private var running = false
 
-    // OpenGL
+    // LWJGL vars
+    private var windowHandle = LWJGL_NULL
+
+    // OpenGL vars
     private var tex = 0
+    private var program = 0
+    private var vbo = 0
+    private var vao = 0
+    private val vertexes = floatArrayOf(
+            -1f, -1f, 0f, 0f,
+            1f, -1f, 1f, 0f,
+            1f, 1f, 1f, 1f,
+            -1f, 1f, 0f, 1f
+    )
 
     override fun changeTitle(title: String) {
         glfwSetWindowTitle(windowHandle, title)
     }
 
     override fun drawChunk(chunk: Chunk) {
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, tex)
-        with (chunk.workGroup) {
-            var buff = BufferUtils.createByteBuffer(w * h * 3)
-            buff.put(chunk.surface)
-            buff.flip()
-            GL11.glTexSubImage2D(GL11.GL_TEXTURE_2D, 0, x, y, w, h, GL11.GL_RGB, GL11.GL_UNSIGNED_BYTE, buff)
+        val surface = chunk.obtainSurface()
+        if (surface != null) {
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, tex)
+            with (chunk.workGroup) {
+                val buff = BufferUtils.createByteBuffer(w * h * 3)
+                buff.put(surface)
+                buff.flip()
+                GL11.glTexSubImage2D(GL11.GL_TEXTURE_2D, 0, x, y, w, h, GL11.GL_RGB, GL11.GL_UNSIGNED_BYTE, buff)
+            }
         }
     }
 
@@ -79,12 +92,7 @@ object LWJGLApp: Frontend {
         glfwSwapInterval(1)
         glfwShowWindow(windowHandle)
         GL.createCapabilities()
-    }
-
-    private fun lwjglLoop(procFunction: (Double) -> Unit) {
         // boring stuff to init openGL for quad drawing
-
-        // shaders
         val vertShader = GL20.glCreateShader(GL20.GL_VERTEX_SHADER)
         GL20.glShaderSource(vertShader, """
             #version 130
@@ -111,29 +119,24 @@ object LWJGLApp: Frontend {
             }
         """)
         GL20.glCompileShader(fragShader)
-        val program = GL20.glCreateProgram()
+        program = GL20.glCreateProgram()
         GL20.glAttachShader(program, vertShader)
         GL20.glAttachShader(program, fragShader)
-        // TODO: transform to getAttrLocation
         GL20.glBindAttribLocation(program, 0, "position")
         GL20.glBindAttribLocation(program, 1, "texcoord")
         GL20.glLinkProgram(program)
         GL20.glUniform1i(GL20.glGetUniformLocation(program, "tex"), 0)
-        // init buffers TODO move to class body
-        val points = floatArrayOf(
-                -1f, -1f, 0f, 0f,
-                1f, -1f, 1f, 0f,
-                1f, 1f, 1f, 1f,
-                -1f, 1f, 0f, 1f
-        )
-        val buff = BufferUtils.createFloatBuffer(points.size)
-        buff.put(points)
+        // delete separate shaders, they are already compiled and linked to shader
+        GL20.glDeleteShader(vertShader)
+        GL20.glDeleteShader(fragShader)
+        val buff = BufferUtils.createFloatBuffer(vertexes.size)
+        buff.put(vertexes)
         buff.flip()
-        val vbo = GL15.glGenBuffers()
+        vbo = GL15.glGenBuffers()
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo)
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buff, GL15.GL_STATIC_DRAW)
 
-        val vao = GL30.glGenVertexArrays()
+        vao = GL30.glGenVertexArrays()
         GL30.glBindVertexArray(vao)
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo)
         GL20.glVertexAttribPointer(0, 2, GL11.GL_FLOAT, false, 4 * 4, 0)
@@ -159,7 +162,9 @@ object LWJGLApp: Frontend {
                 texBuff)
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST)
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST)
+    }
 
+    private fun lwjglLoop(procFunction: (Double) -> Unit) {
         GL11.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
         var dt = .0
         while (!glfwWindowShouldClose(windowHandle)) {
@@ -202,6 +207,10 @@ object LWJGLApp: Frontend {
                 lwjglLoop { handler.proc(this, it) }
                 handler.exit(this)
                 // free all glfw-related things
+                GL15.glDeleteBuffers(vbo)
+                GL30.glDeleteVertexArrays(vao)
+                GL11.glDeleteTextures(tex)
+                GL20.glDeleteProgram(program)
                 glfwFreeCallbacks(windowHandle)
                 glfwDestroyWindow(windowHandle)
             } finally {

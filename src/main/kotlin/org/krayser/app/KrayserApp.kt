@@ -11,7 +11,7 @@ class KrayserApp: AppHandler {
     private var krayser = KrayserController(Scene(), KrayserConfig())
 
     override fun init(frontend: Frontend) {
-
+        krayser.startTrace()
     }
 
     override fun proc(frontend: Frontend, dt: Double) {
