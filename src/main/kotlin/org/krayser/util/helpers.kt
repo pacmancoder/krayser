@@ -6,3 +6,5 @@ package org.krayser.util
  */
 fun nextPowerOfTwo(a: Int) = 32 - Integer.numberOfLeadingZeros(a - 1)
 
+fun cosSin(a: Float) = Pair(Math.cos(a.toDouble()).toFloat(), Math.sin(a.toDouble()).toFloat())
+
