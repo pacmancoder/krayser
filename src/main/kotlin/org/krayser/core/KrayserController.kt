@@ -14,8 +14,8 @@ class KrayserController(val scene: Scene, config: KrayserConfig) {
     var chunks: MutableList<Chunk> = arrayListOf()
     private var chunkTasks: MutableList<Future<*>> = arrayListOf()
     private var threadPool: ExecutorService
-    private var width: Int = 800
-    private var height: Int = 600
+    val width: Int
+    val height: Int
 
     init {
         threadPool = Executors.newFixedThreadPool(config.threads)
@@ -26,7 +26,7 @@ class KrayserController(val scene: Scene, config: KrayserConfig) {
                 for (x in 0 until width step chunkSize) {
                     val w = if (x + chunkSize > width) width % chunkSize else chunkSize
                     val h = if (y + chunkSize > height) height % chunkSize else chunkSize
-                    val chunk = Chunk(scene, ChunkRect(x, y, w, h))
+                    val chunk = Chunk(this@KrayserController, ChunkRect(x, y, w, h))
                     chunks.add(chunk)
                 }
             }

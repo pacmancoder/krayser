@@ -78,6 +78,14 @@ data class Vec3D(var x: Float, var y: Float, var z: Float) {
         2 -> z
         else -> throw IndexOutOfBoundsException("Vector3D have only 3 components")
     }
+
+    operator fun set(index: Int, rhs: Float) = when (index) {
+        0 -> x = rhs
+        1 -> y = rhs
+        2 -> z = rhs
+        else -> throw IndexOutOfBoundsException("Vector3D have only 3 components")
+    }
+
 }
 
 /**

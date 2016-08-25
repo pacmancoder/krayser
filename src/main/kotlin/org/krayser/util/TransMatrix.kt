@@ -8,7 +8,7 @@ class TransMatrix(var data: FloatArray) {
         /**
          * Returns identity matrix
          */
-        fun identity(): TransMatrix = TransMatrix(floatArrayOf(
+        fun identity() = TransMatrix(floatArrayOf(
                 1f, 0f, 0f, 0f,
                 0f, 1f, 0f, 0f,
                 0f, 0f, 1f, 0f,
@@ -17,24 +17,33 @@ class TransMatrix(var data: FloatArray) {
         /**
          * Returns zero matrix
          */
-        fun zero(): TransMatrix = TransMatrix(floatArrayOf(
+        fun zero() = TransMatrix(floatArrayOf(
                 0f, 0f, 0f, 0f,
                 0f, 0f, 0f, 0f,
                 0f, 0f, 0f, 0f,
                 0f, 0f, 0f, 0f))
 
-        fun translate(v: Vec3D): TransMatrix = TransMatrix(floatArrayOf(
+        /**
+         * Translate vertex by vector
+         */
+        fun translate(v: Vec3D) = TransMatrix(floatArrayOf(
                 1f, 0f, 0f, v.x,
                 0f, 1f, 0f, v.y,
                 0f, 0f, 1f, v.z,
                 0f, 0f, 0f, 1f))
 
-        fun scale(v: Vec3D): TransMatrix = TransMatrix(floatArrayOf(
+        /**
+         * Scale point by vector
+         */
+        fun scale(v: Vec3D) = TransMatrix(floatArrayOf(
                 v.x, 0f,  0f,  0f,
                 0f,  v.y, 0f,  0f,
                 0f,  0f,  v.z, 0f,
                 0f,  0f,  0f,  1f))
 
+        /**
+         * Euler's rotation trough X axis
+         */
         fun rotateX(angle: Float): TransMatrix {
             val (cos, sin) = cosSin(angle)
             return TransMatrix(floatArrayOf(
@@ -44,6 +53,9 @@ class TransMatrix(var data: FloatArray) {
                     0f,  0f,  0f,  1f))
         }
 
+        /**
+         * Euler's rotation trough Y axis
+         */
         fun rotateY(angle: Float): TransMatrix {
             val (cos, sin) = cosSin(angle)
             return TransMatrix(floatArrayOf(
@@ -53,6 +65,9 @@ class TransMatrix(var data: FloatArray) {
                     0f,  0f,  0f,  1f))
         }
 
+        /**
+         * Euler's rotation trough Z axis
+         */
         fun rotateZ(angle: Float): TransMatrix {
             val (cos, sin) = cosSin(angle)
             return TransMatrix(floatArrayOf(
@@ -79,7 +94,18 @@ class TransMatrix(var data: FloatArray) {
         }
         return m
     }
-    /*
-        transform, translate, rotateX/Y/Z, scale
+
+    /**
+     * Transform vector
      */
+    operator fun times(rhs: Vec3D): Vec3D {
+        val v = floatArrayOf(0f, 0f, 0f, 0f)
+        for (y in 0..3) {
+            for (n in 0..3) {
+                val axis = if (n == 3) 1f else rhs[n]
+                v[y] += this.data[y * 4 + n] * axis
+            }
+        }
+        return Vec3D(v[0], v[1], v[2]) / v[3]
+    }
 }
