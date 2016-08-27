@@ -1,7 +1,7 @@
 package org.krayser.core
 
-const val defaultWidth = 800
-const val defaultHeight = 600
+const val defaultWidth = 1280
+const val defaultHeight = 1024
 const val defaultChunkSize = 32
 
 /**

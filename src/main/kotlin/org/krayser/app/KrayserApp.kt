@@ -8,7 +8,7 @@ import org.krayser.frontend.Frontend
 
 class KrayserApp: AppHandler {
 
-    private var krayser = KrayserController(Scene(), KrayserConfig())
+    private var krayser = KrayserController(Scene(), KrayserConfig(imageSize = Pair(1280, 1024)))
 
     override fun init(frontend: Frontend) {
         krayser.startTrace()

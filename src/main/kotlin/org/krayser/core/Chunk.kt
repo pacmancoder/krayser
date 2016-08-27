@@ -23,23 +23,39 @@ class Chunk(val krayser: KrayserController, val workGroup: ChunkRect): Runnable 
         surface[(y * workGroup.w + x) * 3 + 1] = (c.y * 255).toByte()
         surface[(y * workGroup.w + x) * 3 + 2] = (c.z * 255).toByte()
     }
+
+    private fun getColor(ray: Ray, pass: Int = 16): Vec3D {
+        val intersection = krayser.scene.objManager.intersect(ray)
+        if (intersection != null) {
+            val (obj, point) = intersection
+            var color = obj.getColor(point)
+            if (pass > 0) {
+                val rRay = Ray(point, ray.dir.reflect(obj.getNormal(point)))
+                val rColor = getColor(rRay, pass - 1)
+                color += rColor * 0.75f
+            }
+            return color
+        } else {
+            return Vec3D(0f)
+        }
+    }
     override fun run() {
         isReady.set(false)
         for ((globalX, globalY) in workGroup) {
             val localX = globalX - workGroup.x
             val localY = globalY - workGroup.y
-            val aspect = krayser.width.toFloat() / krayser.height.toFloat()
-            val dir = (Vec3D(
-                    (globalX / krayser.width.toFloat()) * 2 - 1,
-                    (globalY / krayser.height.toFloat()) * 2 / aspect - 1 / aspect,
-                    0f) - krayser.scene.cam.pos).normalized()
-            val intersection = krayser.scene.objManager.intersect(Ray(krayser.scene.cam.pos, dir))
-            if (intersection != null) {
-                val (obj, point) = intersection
-                setPixel(localX, localY, obj.getColor(point))
-            } else {
-                setPixel(localX, localY, Vec3D(0f))
+            val rays = arrayOf(
+                    krayser.scene.cam.generateRay(globalX.toFloat() + 0.25f, globalY.toFloat() + 0.25f),
+                    krayser.scene.cam.generateRay(globalX.toFloat() + 0.25f, globalY.toFloat() - 0.25f),
+                    krayser.scene.cam.generateRay(globalX.toFloat() - 0.25f, globalY.toFloat() + 0.25f),
+                    krayser.scene.cam.generateRay(globalX.toFloat() - 0.25f, globalY.toFloat() - 0.25f)
+            )
+            var color = Vec3D(0f)
+            for (ray in rays) {
+                color += getColor(ray, 16)
             }
+            color /= rays.size.toFloat()
+            setPixel(localX, localY, color)
             if (Thread.interrupted()) return
         }
         isReady.set(true)

@@ -8,6 +8,7 @@ data class Vec3D(var x: Float, var y: Float, var z: Float) {
      * Constructs vector with scalar
      */
     constructor(scalar: Float): this(scalar, scalar, scalar)
+    constructor(vec: Vec3D): this(vec.x, vec.y, vec.z)
     constructor(vec: Vec2D, scalar: Float): this(vec.x, vec.y, scalar)
     constructor(scalar: Float, vec: Vec2D): this(scalar, vec.x, vec.y)
 
@@ -16,6 +17,14 @@ data class Vec3D(var x: Float, var y: Float, var z: Float) {
      */
     fun len() = Math.sqrt((x * x + y * y + z * z).toDouble()).toFloat()
 
+    fun clamped(min: Float, max: Float): Vec3D {
+        val v = Vec3D(this)
+        for (i in 0..2) {
+            if (v[i] < min) v[i] = min
+            if (v[i] > max) v[i] = max
+        }
+        return v
+    }
     /**
      * Returns normalized vector
      */
@@ -30,8 +39,7 @@ data class Vec3D(var x: Float, var y: Float, var z: Float) {
     /**
      * Returns projection of 3D vector on 2D plane
      */
-    fun
-            project() = Vec2D(x, y)
+    fun project() = Vec2D(x, y)
     /**
      * Returns dot product of vectors
      */
@@ -69,6 +77,10 @@ data class Vec3D(var x: Float, var y: Float, var z: Float) {
      * Returns inverted vector
      */
     operator fun unaryMinus() = Vec3D(-x, -y, -z)
+
+    // vector mix
+    operator fun times(rhs: Vec3D) = Vec3D(x * rhs.x, y * rhs.y, z * rhs.z)
+
     /**
      * Index operator
      */

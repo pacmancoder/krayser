@@ -21,6 +21,8 @@ class KrayserController(val scene: Scene, config: KrayserConfig) {
         threadPool = Executors.newFixedThreadPool(config.threads)
         width = config.imageSize.first
         height = config.imageSize.second
+        scene.cam.rasterWidth = width.toFloat()
+        scene.cam.rasterHeight = height.toFloat()
         with(config) {
             for (y in 0 until height step chunkSize) {
                 for (x in 0 until width step chunkSize) {

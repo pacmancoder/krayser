@@ -22,12 +22,8 @@ class Sphere(val center: Vec3D, val radius: Float, val color: Vec3D): GObject {
     }
 
     override fun getColor(point: Vec3D): Vec3D {
-        val l = (1f - (getNormal(point) dot point.normalized())) * 0.75f
-        if (l >= 0) {
-            return color * l
-        } else {
-            return Vec3D(0.0f)
-        }
+        val l = -getNormal(point) dot point.normalized()
+        return (color * l).clamped(0f, 1f)
     }
 
     override fun getNormal(point: Vec3D) = (point - center).normalized()

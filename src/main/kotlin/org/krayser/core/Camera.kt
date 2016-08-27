@@ -2,21 +2,18 @@ package org.krayser.core
 
 import org.krayser.util.Vec3D
 
-class Camera(fov: Float) {
-    var pos: Vec3D = Vec3D(0f)
+class Camera(var fov: Float, width: Int, height: Int) {
     // will be initialized in constructor
-    var fov: Float = 90f
-        set(value) {
-            // if we can imagine that horizontal axis of screen plane
-            // have length of 2 then  we can calculate multiplier of
-            // this length for getting focal length
-            // so, we have triangle with one cathetus of length 1 / 2
-            // and angle fov / 2, so we can get focal length
-            field = value
-            val focalLength = 1f / Math.tan(Math.toRadians(value / 2.0)).toFloat()
-            pos = Vec3D(0f, 0f, -focalLength)
-        }
-    init {
-        this.fov = fov
+    var rasterWidth = width.toFloat()
+    var rasterHeight = height.toFloat()
+    fun generateRay(x: Float, y: Float): Ray {
+        val aspect = rasterWidth / rasterHeight
+        val fovMul = Math.tan(Math.toRadians(fov.toDouble()) / 2.0).toFloat()
+        val dir = Vec3D(
+                (((x.toFloat() + 0.5f) / rasterWidth) * 2f - 1f) * aspect * fovMul,
+                (1f - ((y.toFloat() + 0.5f) / rasterHeight) * 2f) * fovMul,
+                -1.0f
+        ).normalized()
+        return Ray(Vec3D(0f), dir)
     }
 }
