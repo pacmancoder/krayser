@@ -1,8 +1,6 @@
-krayser
-===
-Kotlin ray tracer. Licensed under [MIT license](LICENSE)
-
+# WORK DISCONTINUED
+Because it must be rewriten from scratch. Code is ugly.
 ### Current status
-Early development. It can render reflective spheres, but code is still
-in draft state, so it looks very ugly.
+It can render reflective spheres with diffuse color. Single light at
+*(0,0,0)*. Camera at same place.
 ![](spheres.png)
